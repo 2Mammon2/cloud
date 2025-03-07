@@ -13,6 +13,7 @@ def run_scoutsuite():
     """Chạy ScoutSuite để quét bảo mật Azure."""
     print("[+] Đang chạy ScoutSuite cho Azure...")
     try:
+        SCOUTSUITE_PATH = "/home/kali/toolcloud/ScoutSuite/scout.py"
         command = f"python scout.py {CLOUD_PROVIDER} --report-dir {OUTPUT_DIR}"
         subprocess.run(command, shell=True, check=True)
         print("[+] Quét hoàn tất! Báo cáo đã được lưu.")
