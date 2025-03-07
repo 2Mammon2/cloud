@@ -22,7 +22,7 @@ def run_scoutsuite(subscription_id):
     """Chạy ScoutSuite để quét bảo mật Azure."""
     print(f"[+] Đang chạy ScoutSuite cho Azure (Subscription: {subscription_id})...")
     try:
-        command = f"source {VENV_PATH} && python3 {SCOUTSUITE_PATH} azure --subscriptions {subscription_id} -c --report-dir {OUTPUT_DIR}"
+        command = f"source {VENV_PATH} && python3 {SCOUTSUITE_PATH} azure --subscriptions {subscription_id} -c --no-browser"
         subprocess.run(command, shell=True, check=True, executable="/bin/bash")  # Chạy trong shell bash
         print("[+] Quét hoàn tất! Báo cáo đã được lưu.")
     except subprocess.CalledProcessError as e:
