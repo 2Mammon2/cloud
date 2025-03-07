@@ -19,12 +19,17 @@ def get_subscription_id():
     return sub_id
 
 def run_scoutsuite(subscription_id):
-    """Chạy ScoutSuite để quét bảo mật Azure."""
+    """Chạy ScoutSuite nhưng không xuất file, lấy dữ liệu từ terminal."""
     print(f"[+] Đang chạy ScoutSuite cho Azure (Subscription: {subscription_id})...")
     try:
-        command = f"source {VENV_PATH} && python3 {SCOUTSUITE_PATH} azure --subscriptions {subscription_id} -c --no-browser"
-        subprocess.run(command, shell=True, check=True, executable="/bin/bash")  # Chạy trong shell bash
-        print("[+] Quét hoàn tất! Báo cáo đã được lưu.")
+        command = f"source {VENV_PATH} && python3 {SCOUTSUITE_PATH} azure --subscriptions {subscription_id} -c --no-browser --no-report-generator --quiet"
+        
+        # Chạy lệnh và lấy dữ liệu JSON từ stdout
+        result = subprocess.run(command, shell=True, check=True, executable="/bin/bash", capture_output=True, text=True)
+        scout_data = json.loads(result.stdout)  # Chuyển output thành JSON
+        
+        print("[+] Quét hoàn tất! Đang phân tích dữ liệu...")
+        return scout_data
     except subprocess.CalledProcessError as e:
         print(f"[!] Lỗi khi chạy ScoutSuite: {e}")
         exit(1)
