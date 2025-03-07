@@ -7,7 +7,6 @@ import subprocess
 SCOUTSUITE_PATH = "/home/kali/toolcloud/ScoutSuite/scout.py"  # Đường dẫn chính xác đến scout.py
 VENV_PATH = "/home/kali/toolcloud/ScoutSuite/scoutenv/bin/activate"  # Đường dẫn môi trường ảo
 OUTPUT_DIR = "scoutsuite-report"
-REPORT_FILE = f"{OUTPUT_DIR}/scoutsuite-results.json"
 CSV_FILE = f"{OUTPUT_DIR}/azure_security_report.csv"
 
 def get_subscription_id():
@@ -34,25 +33,19 @@ def run_scoutsuite(subscription_id):
         print(f"[!] Lỗi khi chạy ScoutSuite: {e}")
         exit(1)
 
-def analyze_report():
-    """Phân tích báo cáo và xuất kết quả ra CSV."""
-    if not os.path.exists(REPORT_FILE):
-        print(f"[!] Không tìm thấy báo cáo: {REPORT_FILE}")
-        exit(1)
-
+def analyze_report(data):
+    """Phân tích dữ liệu quét từ ScoutSuite."""
     print("[+] Đang phân tích báo cáo Azure...")
-    with open(REPORT_FILE, "r", encoding="utf-8") as file:
-        data = json.load(file)
 
     # Lọc các cảnh báo mức độ cao
     critical_issues = []
-    for service, findings in data["services"].items():
-        for finding in findings["findings"]:
-            if finding["level"] in ["high", "critical"]:
+    for service, findings in data.get("services", {}).items():
+        for finding in findings.get("findings", []):
+            if finding.get("level") in ["high", "critical"]:
                 critical_issues.append([
                     service,
-                    finding["title"],
-                    finding["level"],
+                    finding.get("title", "Không có tiêu đề"),
+                    finding.get("level", "Không xác định"),
                     finding.get("description", "Không có mô tả"),
                     finding.get("resource", "Không xác định")
                 ])
@@ -73,6 +66,9 @@ def write_to_csv(data):
     """Ghi dữ liệu lỗ hổng ra file CSV."""
     headers = ["Dịch vụ", "Tên Lỗ Hổng", "Mức Độ", "Mô Tả", "Tài Nguyên Ảnh Hưởng"]
     
+    if not os.path.exists(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR)  # Tạo thư mục nếu chưa có
+
     with open(CSV_FILE, mode="w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(headers)
@@ -82,5 +78,5 @@ def write_to_csv(data):
 
 if __name__ == "__main__":
     subscription_id = get_subscription_id()  # Yêu cầu nhập Subscription ID
-    run_scoutsuite(subscription_id)
-    analyze_report()
+    scout_data = run_scoutsuite(subscription_id)  # Nhận dữ liệu JSON từ terminal
+    analyze_report(scout_data)  # Phân tích và xuất CSV
