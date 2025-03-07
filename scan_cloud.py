@@ -3,19 +3,27 @@ import json
 import csv
 import subprocess
 
-# Cấu hình cloud provider (Azure)
-CLOUD_PROVIDER = "azure"
+# Cấu hình đường dẫn và môi trường
+SCOUTSUITE_PATH = "/home/kali/toolcloud/ScoutSuite/scout.py"  # Đường dẫn chính xác đến scout.py
+VENV_PATH = "/home/kali/toolcloud/ScoutSuite/scoutenv/bin/activate"  # Đường dẫn môi trường ảo
 OUTPUT_DIR = "scoutsuite-report"
 REPORT_FILE = f"{OUTPUT_DIR}/scoutsuite-results.json"
 CSV_FILE = f"{OUTPUT_DIR}/azure_security_report.csv"
 
-def run_scoutsuite():
+def get_subscription_id():
+    """Yêu cầu người dùng nhập Subscription ID của Azure."""
+    sub_id = input("🔹 Nhập Azure Subscription ID: ").strip()
+    if not sub_id:
+        print("[!] Subscription ID không hợp lệ! Hãy nhập lại.")
+        exit(1)
+    return sub_id
+
+def run_scoutsuite(subscription_id):
     """Chạy ScoutSuite để quét bảo mật Azure."""
-    print("[+] Đang chạy ScoutSuite cho Azure...")
+    print(f"[+] Đang chạy ScoutSuite cho Azure (Subscription: {subscription_id})...")
     try:
-        SCOUTSUITE_PATH = "/home/kali/toolcloud/ScoutSuite/scout.py"
-        command = f"python scout.py {CLOUD_PROVIDER} --report-dir {OUTPUT_DIR}"
-        subprocess.run(command, shell=True, check=True)
+        command = f"source {VENV_PATH} && python3 {SCOUTSUITE_PATH} azure --subscriptions {subscription_id} -c --report-dir {OUTPUT_DIR}"
+        subprocess.run(command, shell=True, check=True, executable="/bin/bash")  # Chạy trong shell bash
         print("[+] Quét hoàn tất! Báo cáo đã được lưu.")
     except subprocess.CalledProcessError as e:
         print(f"[!] Lỗi khi chạy ScoutSuite: {e}")
@@ -68,5 +76,6 @@ def write_to_csv(data):
     print(f"[+] Báo cáo CSV đã được lưu tại: {CSV_FILE}")
 
 if __name__ == "__main__":
-    run_scoutsuite()
+    subscription_id = get_subscription_id()  # Yêu cầu nhập Subscription ID
+    run_scoutsuite(subscription_id)
     analyze_report()
